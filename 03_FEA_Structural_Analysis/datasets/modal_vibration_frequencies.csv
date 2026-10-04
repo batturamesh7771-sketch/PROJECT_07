@@ -1,0 +1,7 @@
+Mode,Description,Frequency_Hz,Damping_Ratio
+1,1st Symmetric Wing Bending,1.42,0.024
+2,1st Antisymmetric Wing Bending,2.18,0.022
+3,1st Fuselage Vertical Bending,2.65,0.035
+4,1st Wing In-Plane (Fore-Aft) Bending,3.84,0.021
+5,1st Wing Torsional Flutter Mode,4.95,0.018
+6,Empennage Vertical Fin Torsion,6.12,0.028

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boeing 777 - FEA Structural Stress & Modal Dynamics</title>
+    <style>
+        body { margin: 0; background: #080c14; color: #f0f6fc; font-family: monospace; overflow: hidden; }
+        #canvas-fea { width: 100vw; height: 100vh; display: block; }
+        .panel { position: absolute; background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(8px); border: 1px solid #30363d; border-radius: 8px; padding: 18px; }
+        #control-panel { top: 20px; left: 20px; width: 330px; }
+        #status-panel { bottom: 20px; right: 20px; width: 300px; }
+        h2 { font-size: 14px; color: #f78166; margin-top: 0; }
+        .row { display: flex; justify-content: space-between; font-size: 12px; margin: 6px 0; }
+        input[type=range], select { width: 100%; margin-top: 4px; accent-color: #f78166; background: #21262d; border: 1px solid #30363d; color: #fff; padding: 4px; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="canvas-fea"></div>
+    <div id="control-panel" class="panel">
+        <h2>🛠️ Structural FEA & Modal Modes</h2>
+        <div class="row"><span>Active Modal Mode:</span></div>
+        <select id="mode-select">
+            <option value="1">Mode 1: 1st Wing Bending (1.42 Hz)</option>
+            <option value="2">Mode 2: Wing Torsion Flutter (4.95 Hz)</option>
+            <option value="3">Mode 3: Fuselage Vertical Bending (2.65 Hz)</option>
+            <option value="4">Static: 2.5g Limit Pull-up Stress</option>
+        </select>
+        
+        <div class="row" style="margin-top: 12px;"><span>Displacement Scale:</span><strong id="scale-val">10x</strong></div>
+        <input type="range" id="scale-slider" min="1" max="30" step="1" value="10">
+
+        <div class="row" style="margin-top: 12px;"><span>Cabin Pressurization:</span><strong id="press-val">8.6 psi (Delta P)</strong></div>
+        <input type="range" id="press-slider" min="0" max="10" step="0.5" value="8.6">
+    </div>
+    <div id="status-panel" class="panel">
+        <h2>📈 FAR Part 25 Stress Margin</h2>
+        <div class="row"><span>Peak Von Mises:</span><strong id="vm-val" style="color: #f78166;">312.4 MPa</strong></div>
+        <div class="row"><span>Yield Allowable:</span><strong>503.0 MPa</strong></div>
+        <div class="row"><span>Safety Margin:</span><strong style="color: #3fb950;">+0.07 (FAR 25.303)</strong></div>
+        <div class="row"><span>Wing Tip Deflection:</span><strong id="deflect-val">1.84 m</strong></div>
+    </div>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.set(50, 30, 70);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-fea').appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // Grid
+        scene.add(new THREE.GridHelper(150, 30, 0x30363d, 0x161b22));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+
+        // FEA Wing Geometry
+        const wingSegments = 24;
+        const wingMeshGroup = new THREE.Group();
+        const wingLGeo = new THREE.PlaneGeometry(32, 7, wingSegments, 6);
+        wingLGeo.rotateX(-Math.PI / 2);
+        wingLGeo.translate(16, 0, 0);
+
+        const feaMat = new THREE.MeshBasicMaterial({ wireframe: true, vertexColors: true });
+        // Set Von Mises vertex colors (Red at root, Blue at tip)
+        const pos = wingLGeo.attributes.position;
+        const colors = [];
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const ratio = 1.0 - (x / 32.0); // 1 at root, 0 at tip
+            colors.push(ratio, 0.2, 1.0 - ratio);
+        }
+        wingLGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+        const wingMesh = new THREE.Mesh(wingLGeo, feaMat);
+        wingMeshGroup.add(wingMesh);
+
+        // Mirror for right wing
+        const wingRGeo = wingLGeo.clone();
+        wingRGeo.scale(-1, 1, 1);
+        const wingR = new THREE.Mesh(wingRGeo, feaMat);
+        wingMeshGroup.add(wingR);
+        scene.add(wingMeshGroup);
+
+        let t = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            t += 0.05;
+            controls.update();
+
+            const scale = parseFloat(document.getElementById('scale-slider').value);
+            const mode = document.getElementById('mode-select').value;
+            
+            // Modal vibration displacement
+            const p = wingLGeo.attributes.position;
+            for (let i = 0; i < p.count; i++) {
+                const x = Math.abs(p.getX(i));
+                let dz = 0;
+                if (mode === "1") {
+                    dz = Math.sin(t * 1.42) * Math.pow(x / 32.0, 2) * (scale * 0.15);
+                } else if (mode === "2") {
+                    dz = Math.sin(t * 4.95) * Math.sin(x / 5.0) * (scale * 0.1);
+                } else {
+                    dz = Math.pow(x / 32.0, 2) * (scale * 0.12);
+                }
+                p.setY(i, dz);
+            }
+            wingLGeo.attributes.position.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

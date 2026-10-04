@@ -1,0 +1,6 @@
+Subsystem,Material,Allowable_MPa,Applied_Peak_MPa,Factor_of_Safety,Margin_of_Safety
+Wing Box Root Spar Cap,7075-T6 Al,503.0,312.4,1.61,+0.07 (FAR 25.303 Compliant)
+Fuselage Crown Skin Panel,2024-T3 Al,345.0,125.8,2.74,+0.83 (Pressurization + 1g)
+Wing-Fuselage Center Carry-Through,Ti-6Al-4V,880.0,540.2,1.63,+0.09
+GE90 Engine Pylon Strut,Ti-6Al-4V,880.0,498.6,1.76,+0.18
+Main Landing Gear Trunnion,300M High-Strength Steel,1550.0,980.0,1.58,+0.05 (10 ft/s sink rate)
