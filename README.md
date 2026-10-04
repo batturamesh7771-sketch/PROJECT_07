@@ -1,4 +1,6 @@
 # PROJECT 07: Boeing 777 Aerospace Engineering Suite
+[![Author](https://img.shields.io/badge/Author-ELONIKHIL-blue.svg)](https://github.com/batturamesh7771-sketch)
+
 ## SolidWorks 3D Modeling, Transonic CFD Aerodynamics & FEA Structural Mechanics
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](05_Documentation_and_Media/LICENSE)
@@ -88,3 +90,10 @@ Open `03_FEA_Structural_Analysis/web_app/Boeing_777_FEA_Interactive_Platform.htm
 
 ### 4. Launch Unified WebGPU Digital Twin Platform
 Open `04_Unified_WebGPU_CFD_FEA_Platform/Boeing_777_WebGPU_CFD_FEA_Platform.html` to experience the complete 110-feature simulation platform.
+
+---
+
+## 👨‍💻 Author & Attribution
+* **Lead Architect & Engineer:** **ELONIKHIL** (@batturamesh7771-sketch)
+* **Project Series:** PROJECT 07 of the Aerospace Engineering Portfolio
+* **License:** [MIT License](LICENSE) (c) 2026 ELONIKHIL
